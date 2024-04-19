@@ -97,13 +97,23 @@
         }
 
         // Function to handle image upload and prediction
-        function handleImageUpload(event) {
+        async function handleImageUpload(event) {
             const file = event.target.files[0];
             const image = document.createElement('img');
             image.src = URL.createObjectURL(file);
             image.onload = async function() {
                 await predict(image);
             };
+        }
+
+        // 이미지 예측 수행
+        async function predict() {
+            // 호출된 predict() 함수 내부에서 사용될 변수 정의
+            var image = document.getElementById('file-image');
+
+            // 이미지 객체를 전달하여 예측 수행
+            const prediction = await model.predict(image, false);
+            console.log(prediction);
         }
 
         // Attach event listener to handle image upload
