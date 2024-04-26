@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self' data:; img-src 'self' data:;">
     <title>File Upload with Image Preview</title>
     <link rel="stylesheet" href="uploader-styles.css">
+    <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://cdn.jsdelivr.net/npm https://cdnjs.cloudflare.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maxcdn.bootstrapcdn.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' https://cdn.jsdelivr.net/npm;">
+  
+
 </head>
 <body>
 
@@ -35,9 +42,11 @@
     <button type="button" onclick="init()">Start</button>
     <button type="button" onclick="predict()">예측</button>
 
+    
     <div id="label-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script src="script.js"></script>
+
 </body>
 </html>
