@@ -52,21 +52,20 @@ async function loadModel() {
 
 window.onload = loadModel;  // Ensure model is loaded on page load
 
-// Function to handle image upload and run prediction
+// Function to handle image upload and prediction
 async function handleImageUpload(event) {
     const file = event.target.files[0];
     const reader = new FileReader();
-    reader.onload = async (e) => {
+
+    reader.onload = function(e) {
         const image = new Image();
-        image.onload = async () => {
-            if (model) {
-                await predict(image);
-            } else {
-                console.error('Model not loaded');
-            }
+        image.onload = async function() {
+            // 이미지가 완전히 로드된 후에 예측을 실행합니다.
+            await predict(image);
         };
         image.src = e.target.result;
     };
+
     reader.readAsDataURL(file);
 }
 
