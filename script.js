@@ -153,6 +153,18 @@ function ekUpload(){
 }
 ekUpload();
 
+let model;
+async function loadModel() {
+    model = await tmImage.loadModel('/my_model/model.json');
+}
+
+loadModel().then(() => {
+    console.log('모델 로드 완료');
+    // 모델 로드 완료 후 기능 활성화 등의 작업을 할 수 있습니다.
+});
+
+
+
 function handleImageUpload(event) {
     const file = event.target.files[0];
     const image = new Image();
