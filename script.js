@@ -1,12 +1,12 @@
-// 
+// File Upload
 function ekUpload(){
     function Init() {
 
         console.log("Upload Initialised");
 
-        var fileSelect    = document.getElementById('file-upload'),
-            fileDrag      = document.getElementById('file-drag'),
-            submitButton  = document.getElementById('submit-button');
+        var fileSelect = document.getElementById('file-upload'),
+            fileDrag = document.getElementById('file-drag'),
+            submitButton = document.getElementById('submit-button');
 
         fileSelect.addEventListener('change', fileSelectHandler, false);
 
@@ -42,7 +42,6 @@ function ekUpload(){
         }
     }
 
-    // Output
     function output(msg) {
         // Response
         var m = document.getElementById('messages');
@@ -60,7 +59,6 @@ function ekUpload(){
             document.getElementById('start').classList.add("hidden");
             document.getElementById('response').classList.remove("hidden");
             document.getElementById('notimage').classList.add("hidden");
-            // Thumbnail Preview
             document.getElementById('file-image').classList.remove("hidden");
 
             var reader = new FileReader();
@@ -77,73 +75,6 @@ function ekUpload(){
         }
     }
 
-    // Function to handle image upload and prediction
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        const image = document.createElement('img');
-        image.onload = async function() {
-            await predict(image);
-        };
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            image.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function setProgressMaxValue(e) {
-        var pBar = document.getElementById('file-progress');
-
-        if (e.lengthComputable) {
-            pBar.max = e.total;
-        }
-    }
-
-    function updateFileProgress(e) {
-        var pBar = document.getElementById('file-progress');
-
-        if (e.lengthComputable) {
-            pBar.value = e.loaded;
-        }
-    }
-
-    function uploadFile(file) {
-
-        var xhr = new XMLHttpRequest(),
-            fileInput = document.getElementById('class-roster-file'),
-            pBar = document.getElementById('file-progress'),
-            fileSizeLimit = 1024; // In MB
-        if (xhr.upload) {
-            // Check if file is less than x MB
-            if (file.size <= fileSizeLimit * 1024 * 1024) {
-                // Progress bar
-                pBar.style.display = 'inline';
-                xhr.upload.addEventListener('loadstart', setProgressMaxValue, false);
-                xhr.upload.addEventListener('progress', updateFileProgress, false);
-
-                // File received / failed
-                xhr.onreadystatechange = function(e) {
-                    if (xhr.readyState == 4) {
-                        // Everything is good!
-
-                        // progress.className = (xhr.status == 200 ? "success" : "failure");
-                        // document.location.reload(true);
-                    }
-                };
-
-                // Start upload
-                xhr.open('POST', document.getElementById('file-upload-form').action, true);
-                xhr.setRequestHeader('X-File-Name', file.name);
-                xhr.setRequestHeader('X-File-Size', file.size);
-                xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-                xhr.send(file);
-            } else {
-                output('Please upload a smaller file (< ' + fileSizeLimit + ' MB).');
-            }
-        }
-    }
-
-    // Check for the various File API support.
     if (window.File && window.FileList && window.FileReader) {
         Init();
     } else {
@@ -152,59 +83,47 @@ function ekUpload(){
 }
 ekUpload();
 
+// Global variable declaration for the model
 let model;
+let maxPredictions;
+
+// Load model
 async function loadModel() {
-    // Assuming model is already declared globally at the top of your script
-    model = await tmImage.loadModel('/my_model/model.json');
+    model = await tmImage.loadModel('model.json');
+    maxPredictions = model.getTotalClasses();
+    console.log('Model loaded');
 }
 
-loadModel().then(() => {
-    console.log('모델 로드 완료');
-    // 모델 로드 완료 후 기능 활성화 등의 작업을 할 수 있습니다.
-});
+// Load model at startup
+window.onload = function() {
+    loadModel();
+};
 
-
-
-function handleImageUpload(event) {
+// Image upload and prediction handling
+async function handleImageUpload(event) {
     const file = event.target.files[0];
-    const image = new Image();
-    image.onload = async function() {
-        // 이미지 크기를 조절
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxSize = 224; // 최대 크기 지정 (모델 요구 사항에 따라 조정)
-        const scaleSize = maxSize / Math.max(image.width, image.height);
-        canvas.width = image.width * scaleSize;
-        canvas.height = image.height * scaleSize;
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-        // 조정된 이미지로 예측 수행
-        await predict(canvas);
-    };
     const reader = new FileReader();
-    reader.onload = function(event) {
-        image.src = event.target.result;
+    reader.onload = async (e) => {
+        const image = new Image();
+        image.onload = async () => {
+            await predict(image);
+        };
+        image.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
 
+// Prediction function
 async function predict(image) {
-    // 모델에 이미지를 전달하여 예측 수행
     const prediction = await model.predict(image);
-    
-    // 분류 결과를 출력할 요소 선택
-    const labelContainer = document.getElementById('label-container');
 
-    // 분류 결과를 labelContainer에 추가
+    const labelContainer = document.getElementById('label-container');
+    labelContainer.innerHTML = ''; // Clear previous results
     for (let i = 0; i < maxPredictions; i++) {
-        // 분류 결과에 해당하는 클래스명과 확률을 가져옴
         const className = prediction[i].className;
         const probability = prediction[i].probability.toFixed(2);
-        
-        // 분류 결과를 HTML 형태로 구성하여 labelContainer에 추가
         const label = document.createElement('div');
         label.innerHTML = `${className}: ${probability}`;
         labelContainer.appendChild(label);
     }
 }
-
