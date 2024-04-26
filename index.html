@@ -16,7 +16,7 @@
     <form id="file-upload-form" class="uploader">
         <input id="file-upload" type="file" name="fileUpload" accept="image/*" />
         <label for="file-upload" id="file-drag">
-            <img id="file-image" id='imageid' src="#" alt="Preview" class="hidden">
+            <img id="file-image" src="#" alt="Preview" class="hidden">
             <div id="start">
                 <i class="fa fa-download" aria-hidden="true"></i>
                 <div>Select a file or drag here</div>
@@ -32,63 +32,97 @@
         </label>
     </form>
 
-    
     <div>Teachable Machine Image Model</div>
+    <!-- Start 버튼을 클릭했을 때 init() 함수 호출 -->
     <button type="button" onclick="init()">Start</button>
-    <button type="button" onclick="predict()">예측</button>
-    
-
+    <button type="button" onclick="predict()">구별</button>
     <div id="label-container"></div>
+
+    <!-- 추가된 테이블 -->
+    <!-- Table Start -->
+    <table id="table_id">
+        <thead>
+            <tr>
+                <th width="30%">ROW_HEAD1</th>
+                <td width="10%">Menu01</td>
+                <td width="40%">Menu02</td>
+                <td width="20%">Menu03</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="tr_color">
+                <th>ROW_HEAD2</th>
+                <td id="td1"></td>
+                <td>Value02</td>
+                <td>Value03</td>
+            </tr>  
+            <tr>   
+                <th>ROW_HEAD3</th>
+                <td>Value11</td>
+                <td>Value12</td>
+                <td>Value13</td>
+            </tr>  
+             <tr class="tr_color">  
+                <th>ROW_HEAD4</th>
+                <td>Value21</td>
+                <td>Value22</td>
+                <td>Value23</td>
+            </tr>
+        </tbody>
+    </table>
+    <!-- Table End -->
+
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script type="text/javascript">
-        // More API functions here:
-        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
-
         // the link to your model provided by Teachable Machine export panel
         const URL = "./my_model/";
 
-        let model, webcam, labelContainer, maxPredictions;
+        let model, labelContainer, maxPredictions;
 
-        // Load the image model and setup the webcam
+        // Load the image model
         async function init() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
 
             // load the model and metadata
-            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-            // or files from your local hard drive
-            // Note: the pose library adds "tmImage" object to your window (window.tmImage)
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
-        
+
             // append elements to the DOM
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
             labelContainer = document.getElementById("label-container");
             for (let i = 0; i < maxPredictions; i++) { // and class labels
                 labelContainer.appendChild(document.createElement("div"));
             }
         }
 
-        // run the webcam image through the image model
-        async function predict() {
-            // predict can take in an image, video or canvas html element
-            var image = document.getElementById("imageid")
-            const prediction = await model.predict(image,false);
-            for (let i = 0; i < maxPredictions; i++) {
-                const classPrediction =
-                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-                labelContainer.childNodes[i].innerHTML = classPrediction;
-            }
+        // Function to handle image upload and prediction
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            const image = document.createElement('img');
+            image.src = URL.createObjectURL(file);
+            image.onload = async function() {
+                await predict(image);
+            };
         }
+
+        // 이미지 예측 수행
+        async function predict() {
+            // 호출된 predict() 함수 내부에서 사용될 변수 정의
+            var image = document.getElementById('file-image');
+
+            // 이미지 객체를 전달하여 예측 수행
+            const prediction = await model.predict(image, false);
+            console.log(prediction);
+        }
+
+        // Attach event listener to handle image upload
+        const fileInput = document.getElementById('file-upload');
+        fileInput.addEventListener('change', handleImageUpload);
     </script>
-
-
 
 
     <!-- 스크립트 파일 연결 -->
     <script src="script.js"></script>
 </body>
 </html>
-
-
