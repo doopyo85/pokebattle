@@ -155,6 +155,7 @@ ekUpload();
 
 let model;
 async function loadModel() {
+    // Assuming model is already declared globally at the top of your script
     model = await tmImage.loadModel('/my_model/model.json');
 }
 
@@ -207,3 +208,4 @@ async function predict(image) {
         labelContainer.appendChild(label);
     }
 }
+
