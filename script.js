@@ -1,4 +1,3 @@
-// File Upload
 // 
 function ekUpload(){
     function Init() {
