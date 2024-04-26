@@ -1,104 +1,85 @@
-// File Upload
-function ekUpload(){
-    function Init() {
-        console.log("Upload Initialised");
+// Ensures ekUpload does not conflict with other model declarations
+function ekUpload() {
+    console.log("Upload Initialized");
 
-        var fileSelect = document.getElementById('file-upload'),
-            fileDrag = document.getElementById('file-drag');
-
-        fileSelect.addEventListener('change', fileSelectHandler, false);
-
-        var xhr = new XMLHttpRequest();
-        if (xhr.upload) {
-            fileDrag.addEventListener('dragover', fileDragHover, false);
-            fileDrag.addEventListener('dragleave', fileDragHover, false);
-            fileDrag.addEventListener('drop', fileSelectHandler, false);
-        }
-    }
+    const fileSelect = document.getElementById('file-upload'),
+          fileDrag = document.getElementById('file-drag'),
+          messages = document.getElementById('messages');
 
     function fileDragHover(e) {
-        var fileDrag = document.getElementById('file-drag');
-
-        e.stopPropagation();
         e.preventDefault();
-
+        e.stopPropagation();
         fileDrag.className = (e.type === 'dragover' ? 'hover' : 'modal-body file-upload');
     }
 
     function fileSelectHandler(e) {
-        var files = e.target.files || e.dataTransfer.files;
-
+        const files = e.target.files || e.dataTransfer.files;
         fileDragHover(e);
-
-        for (var i = 0, f; f = files[i]; i++) {
-            parseFile(f);
-        }
+        Array.from(files).forEach(parseFile);
     }
 
     function parseFile(file) {
-        console.log(file.name);
-        document.getElementById('messages').innerHTML = '<strong>' + encodeURI(file.name) + '</strong>';
-
-        var imageName = file.name;
-        var isGood = /\.(?=gif|jpg|png|jpeg)/gi.test(imageName);
-
-        if (isGood) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('file-image').src = e.target.result;
-                document.getElementById('start').classList.add("hidden");
-                document.getElementById('response').classList.remove("hidden");
-                document.getElementById('notimage').classList.add("hidden");
-                document.getElementById('file-image').classList.remove("hidden");
-            };
-            reader.readAsDataURL(file);
-        } else {
-            document.getElementById('file-image').classList.add("hidden");
-            document.getElementById('notimage').classList.remove("hidden");
-            document.getElementById('start').classList.remove("hidden");
-            document.getElementById('response').classList.add("hidden");
-            document.getElementById("file-upload-form").reset();
-        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('file-image').src = e.target.result;
+            messages.innerHTML = `<strong>${encodeURI(file.name)}</strong>`;
+            document.getElementById('start').classList.add("hidden");
+            document.getElementById('response').classList.remove("hidden");
+            document.getElementById('notimage').classList.add("hidden");
+            document.getElementById('file-image').classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
     }
 
-    if (window.File && window.FileList && window.FileReader) {
-        Init();
-    } else {
-        document.getElementById('file-drag').style.display = 'none';
-    }
+    fileSelect.addEventListener('change', fileSelectHandler, false);
+    fileDrag.addEventListener('dragover', fileDragHover, false);
+    fileDrag.addEventListener('dragleave', fileDragHover, false);
+    fileDrag.addEventListener('drop', fileSelectHandler, false);
 }
-ekUpload();
 
-// Global model variables
+ekUpload();  // Initialize the upload functionality
+
+// Global model variable
 let model, maxPredictions;
 
+// Function to load the model
 async function loadModel() {
-    model = await tmImage.loadModel('model.json');
+    const modelURL = 'model.json';  // Ensure path is correct
+    model = await tmImage.loadModel(modelURL);
     maxPredictions = model.getTotalClasses();
     console.log('Model loaded');
 }
 
-window.onload = function() {
-    loadModel();
-};
+window.onload = loadModel;  // Ensure model is loaded on page load
 
+// Function to handle image upload and run prediction
 async function handleImageUpload(event) {
     const file = event.target.files[0];
     const reader = new FileReader();
     reader.onload = async (e) => {
         const image = new Image();
         image.onload = async () => {
-            await predict(image);
+            if (model) {
+                await predict(image);
+            } else {
+                console.error('Model not loaded');
+            }
         };
         image.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
 
+// Function to predict image data using the loaded model
 async function predict(image) {
+    if (!model) {
+        console.error('Model is not initialized');
+        return;
+    }
+
     const prediction = await model.predict(image);
     const labelContainer = document.getElementById('label-container');
-    labelContainer.innerHTML = '';
+    labelContainer.innerHTML = '';  // Clear previous predictions
 
     for (let i = 0; i < maxPredictions; i++) {
         const className = prediction[i].className;
