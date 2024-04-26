@@ -1,19 +1,15 @@
 // File Upload
 function ekUpload(){
     function Init() {
-
         console.log("Upload Initialised");
 
         var fileSelect = document.getElementById('file-upload'),
-            fileDrag = document.getElementById('file-drag'),
-            submitButton = document.getElementById('submit-button');
+            fileDrag = document.getElementById('file-drag');
 
         fileSelect.addEventListener('change', fileSelectHandler, false);
 
-        // Is XHR2 available?
         var xhr = new XMLHttpRequest();
         if (xhr.upload) {
-            // File Drop
             fileDrag.addEventListener('dragover', fileDragHover, false);
             fileDrag.addEventListener('dragleave', fileDragHover, false);
             fileDrag.addEventListener('drop', fileSelectHandler, false);
@@ -30,40 +26,30 @@ function ekUpload(){
     }
 
     function fileSelectHandler(e) {
-        // Fetch FileList object
         var files = e.target.files || e.dataTransfer.files;
 
-        // Cancel event and hover styling
         fileDragHover(e);
 
-        // Process all File objects
         for (var i = 0, f; f = files[i]; i++) {
             parseFile(f);
         }
     }
 
-    function output(msg) {
-        // Response
-        var m = document.getElementById('messages');
-        m.innerHTML = msg;
-    }
-
     function parseFile(file) {
         console.log(file.name);
-        output('<strong>' + encodeURI(file.name) + '</strong>');
+        document.getElementById('messages').innerHTML = '<strong>' + encodeURI(file.name) + '</strong>';
 
         var imageName = file.name;
-
         var isGood = /\.(?=gif|jpg|png|jpeg)/gi.test(imageName);
-        if (isGood) {
-            document.getElementById('start').classList.add("hidden");
-            document.getElementById('response').classList.remove("hidden");
-            document.getElementById('notimage').classList.add("hidden");
-            document.getElementById('file-image').classList.remove("hidden");
 
+        if (isGood) {
             var reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('file-image').src = e.target.result;
+                document.getElementById('start').classList.add("hidden");
+                document.getElementById('response').classList.remove("hidden");
+                document.getElementById('notimage').classList.add("hidden");
+                document.getElementById('file-image').classList.remove("hidden");
             };
             reader.readAsDataURL(file);
         } else {
@@ -83,23 +69,19 @@ function ekUpload(){
 }
 ekUpload();
 
-// Global variable declaration for the model
-let model;
-let maxPredictions;
+// Global model variables
+let model, maxPredictions;
 
-// Load model
 async function loadModel() {
     model = await tmImage.loadModel('model.json');
     maxPredictions = model.getTotalClasses();
     console.log('Model loaded');
 }
 
-// Load model at startup
 window.onload = function() {
     loadModel();
 };
 
-// Image upload and prediction handling
 async function handleImageUpload(event) {
     const file = event.target.files[0];
     const reader = new FileReader();
@@ -113,12 +95,11 @@ async function handleImageUpload(event) {
     reader.readAsDataURL(file);
 }
 
-// Prediction function
 async function predict(image) {
     const prediction = await model.predict(image);
-
     const labelContainer = document.getElementById('label-container');
-    labelContainer.innerHTML = ''; // Clear previous results
+    labelContainer.innerHTML = '';
+
     for (let i = 0; i < maxPredictions; i++) {
         const className = prediction[i].className;
         const probability = prediction[i].probability.toFixed(2);
