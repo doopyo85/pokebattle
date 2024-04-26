@@ -153,6 +153,29 @@ function ekUpload(){
 }
 ekUpload();
 
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const image = new Image();
+    image.onload = async function() {
+        // 이미지 크기를 조절
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const maxSize = 224; // 최대 크기 지정 (모델 요구 사항에 따라 조정)
+        const scaleSize = maxSize / Math.max(image.width, image.height);
+        canvas.width = image.width * scaleSize;
+        canvas.height = image.height * scaleSize;
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        // 조정된 이미지로 예측 수행
+        await predict(canvas);
+    };
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        image.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 async function predict(image) {
     // 모델에 이미지를 전달하여 예측 수행
     const prediction = await model.predict(image);
