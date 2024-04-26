@@ -40,14 +40,17 @@ function ekUpload() {
 ekUpload();  // Initialize the upload functionality
 
 // Global model variable
-let model, maxPredictions;
+let model;
+let maxPredictions;
 
 // Function to load the model
 async function loadModel() {
-    const modelURL = 'model.json';  // Ensure path is correct
-    model = await tmImage.loadModel(modelURL);
-    maxPredictions = model.getTotalClasses();
-    console.log('Model loaded');
+    if (!model) {  // 모델이 이미 초기화되지 않았다면 로드합니다.
+        const modelURL = 'model.json';  // Ensure path is correct
+        model = await tmImage.loadModel(modelURL);
+        maxPredictions = model.getTotalClasses();
+        console.log('Model loaded');
+    }
 }
 
 window.onload = loadModel;  // Ensure model is loaded on page load
