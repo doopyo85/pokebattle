@@ -37,10 +37,9 @@ function ekUpload() {
     fileDrag.addEventListener('drop', fileSelectHandler, false);
 }
 
-// Initialize upload functionality
 document.addEventListener("DOMContentLoaded", function() {
     ekUpload();
-    document.getElementById('start-button').addEventListener('click', loadModel);
+    document.getElementById('start-button').addEventListener('click', init);
     document.getElementById('predict-button').addEventListener('click', function() {
         const image = document.getElementById('file-image');
         if (image.src) {
@@ -49,42 +48,21 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-// Global model variable
-let model;
-let maxPredictions;
+let model, labelContainer, maxPredictions;
 
-// Function to load the model
-async function loadModel() {
-    if (!model) {  // Check if the model has not been initialized yet
-        try {
-            const modelURL = 'model.json';  // Ensure path is correct
-            model = await tmImage.loadmodel(modelURL);  // Updated to use 'loadmodel'
-            maxPredictions = model.getTotalClasses();
-            console.log('Model loaded');
-        } catch (error) {
-            console.error("Failed to load model", error);
-        }
+async function init() {
+    const modelURL = './my_model/model.json';
+    const metadataURL = './my_model/metadata.json';
+
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
+    labelContainer = document.getElementById('label-container');
+    for (let i = 0; i < maxPredictions; i++) {
+        labelContainer.appendChild(document.createElement('div'));
     }
+    console.log('Model loaded');
 }
 
-// Function to handle image upload and prediction
-async function handleImageUpload(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        const image = new Image();
-        image.onload = async function() {
-            // Predict once the image is fully loaded
-            await predict(image);
-        };
-        image.src = e.target.result;
-    };
-
-    reader.readAsDataURL(file);
-}
-
-// Function to predict image data using the loaded model
 async function predict(image) {
     if (!model) {
         console.error('Model is not initialized');
@@ -92,14 +70,10 @@ async function predict(image) {
     }
 
     const prediction = await model.predict(image);
-    const labelContainer = document.getElementById('label-container');
-    labelContainer.innerHTML = '';  // Clear previous predictions
-
     for (let i = 0; i < maxPredictions; i++) {
         const className = prediction[i].className;
         const probability = prediction[i].probability.toFixed(2);
-        const label = document.createElement('div');
+        const label = labelContainer.childNodes[i];
         label.innerHTML = `${className}: ${probability}`;
-        labelContainer.appendChild(label);
     }
 }
