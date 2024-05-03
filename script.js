@@ -37,7 +37,17 @@ function ekUpload() {
     fileDrag.addEventListener('drop', fileSelectHandler, false);
 }
 
-ekUpload();  // Initialize the upload functionality
+// Initialize upload functionality
+document.addEventListener("DOMContentLoaded", function() {
+    ekUpload();
+    document.getElementById('start-button').addEventListener('click', loadModel);
+    document.getElementById('predict-button').addEventListener('click', function() {
+        const image = document.getElementById('file-image');
+        if (image.src) {
+            predict(image);
+        }
+    });
+});
 
 // Global model variable
 let model;
@@ -45,15 +55,13 @@ let maxPredictions;
 
 // Function to load the model
 async function loadModel() {
-    if (!model) {  // 모델이 이미 초기화되지 않았다면 로드합니다.
+    if (!model) {  // Check if the model has not been initialized yet
         const modelURL = 'model.json';  // Ensure path is correct
         model = await tmImage.loadModel(modelURL);
         maxPredictions = model.getTotalClasses();
         console.log('Model loaded');
     }
 }
-
-window.onload = loadModel;  // Ensure model is loaded on page load
 
 // Function to handle image upload and prediction
 async function handleImageUpload(event) {
@@ -63,7 +71,7 @@ async function handleImageUpload(event) {
     reader.onload = function(e) {
         const image = new Image();
         image.onload = async function() {
-            // 이미지가 완전히 로드된 후에 예측을 실행합니다.
+            // Predict once the image is fully loaded
             await predict(image);
         };
         image.src = e.target.result;
