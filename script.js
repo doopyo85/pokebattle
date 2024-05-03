@@ -56,10 +56,14 @@ let maxPredictions;
 // Function to load the model
 async function loadModel() {
     if (!model) {  // Check if the model has not been initialized yet
-        const modelURL = 'model.json';  // Ensure path is correct
-        model = await tmImage.loadModel(modelURL);
-        maxPredictions = model.getTotalClasses();
-        console.log('Model loaded');
+        try {
+            const modelURL = 'model.json';  // Ensure path is correct
+            model = await tmImage.loadmodel(modelURL);  // Updated to use 'loadmodel'
+            maxPredictions = model.getTotalClasses();
+            console.log('Model loaded');
+        } catch (error) {
+            console.error("Failed to load model", error);
+        }
     }
 }
 
